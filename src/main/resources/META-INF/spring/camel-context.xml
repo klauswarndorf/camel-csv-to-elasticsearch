@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <bean id="mapping" class="com.yoc.importer.elasticsearch.processors.Mapping" />
+
+    <camelContext xmlns="http://camel.apache.org/schema/spring">
+
+<!-- first route reads csv files from folder src/main/resources/input and
+     moves them after reading to src/main/resources/input/.camel folder.
+     splits by newline, unmarshals with tab as separator and sends to mapping processor -->
+        <route id="readCSVFiles">
+            <from uri="file:src/main/resources/input?charset=ISO8859-1" />
+            <split streaming="true">
+                <tokenize token="\n" />
+                <choice>
+                    <when>
+                        <simple>${property.CamelSplitIndex} > 0</simple>
+                        <unmarshal>
+                            <csv delimiter="&#x9;" />
+                        </unmarshal>
+                        <to uri="direct:map" />
+                    </when>
+                </choice>
+            </split>
+        </route>
+
+<!-- second route maps data from List<List<String>> to HashMap<String, String> -->
+        <route id="mapData">
+            <from uri="direct:map" />
+            <process ref="mapping" />
+            <to uri="direct:index" />
+        </route>
+
+<!-- third route writes HashMap<String, String> to camel-elasticsearch -->
+        <route id="indexData">
+            <from uri="direct:index" />
+            <to
+                uri="elasticsearch://elasticsearch?operation=INDEX&amp;indexName=cameltest&amp;indexType=cameltestdata&amp;ip=192.168.101.98&amp;port=9300" />
+        </route>
+
+    </camelContext>
+
+</beans>
