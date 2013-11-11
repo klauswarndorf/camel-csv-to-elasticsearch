@@ -11,11 +11,11 @@
 
     <camelContext xmlns="http://camel.apache.org/schema/spring">
 
-<!-- first route reads csv files from folder src/main/resources/input and
+	<!-- first route reads csv files from folder src/main/resources/input and
      moves them after reading to src/main/resources/input/.camel folder.
      splits by newline, unmarshals with tab as separator and sends to mapping processor -->
         <route id="readCSVFiles">
-            <from uri="file:src/main/resources/input?charset=ISO8859-1" />
+            <from uri="file:///data/nfs/share/smartfeed_mapped_csv/mapped?charset=ISO8859-1" />
             <split streaming="true">
                 <tokenize token="\n" />
                 <choice>
@@ -38,10 +38,10 @@
         </route>
 
 <!-- third route writes HashMap<String, String> to camel-elasticsearch -->
-        <route id="indexData">
+        <route trace="true" id="indexData">
             <from uri="direct:index" />
             <to
-                uri="elasticsearch://elasticsearch?operation=INDEX&amp;indexName=cameltest&amp;indexType=cameltestdata&amp;ip=192.168.101.98&amp;port=9300" />
+                uri="elasticsearch://belboon.smartfeed2?operation=INDEX&amp;indexName=es_t_data&amp;indexType=es_t_data_product&amp;ip=10.10.10.216&amp;port=9300" />
         </route>
 
     </camelContext>
