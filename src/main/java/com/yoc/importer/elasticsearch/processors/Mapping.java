@@ -59,7 +59,13 @@ public class Mapping implements Processor {
             /**
              * puts filename as key value pair in result
              */
-            out.put("fileName", (String)exchange.getIn().getHeader("fileName"));
+            out.put("fileName", (String)exchange.getIn().getHeader("CamelFileName"));
+
+            /**
+             * sets the index name
+             */
+            String indexName = (String)exchange.getIn().getHeader("CamelFileName");
+            exchange.getIn().setHeader("CamelIndexName", indexName.split(".")[0]);
 
             /**
              * sets the out object in the exchange object
